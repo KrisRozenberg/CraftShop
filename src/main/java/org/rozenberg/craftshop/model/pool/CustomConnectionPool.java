@@ -69,10 +69,6 @@ public class CustomConnectionPool {
         return instance;
     }
 
-    public int getFreeConnectionsNumber() {
-        return freeConnections.size();
-    }
-
     public Connection getConnection() {
         ProxyConnection connection = null;
         try {

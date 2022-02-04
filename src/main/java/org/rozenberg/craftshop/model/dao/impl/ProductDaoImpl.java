@@ -11,9 +11,11 @@ import org.rozenberg.craftshop.model.pool.CustomConnectionPool;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ProductDaoImpl implements ProductDao {
     private static final Logger logger = LogManager.getLogger();
+    private static final int ONE_CONSTANT = 1;
 
     private static final String CREATE_QUERY = """
             INSERT INTO products (name, description, image_url, price, status, category_id) 
@@ -37,6 +39,16 @@ public class ProductDaoImpl implements ProductDao {
     private static final String GET_ALL_QUERY = """
             SELECT product_id, name, description, image_url, price, status, category_id  
             FROM products;""";
+
+    private static final String GET_BY_CATEGORY_NAME_QUERY = """
+            SELECT p.product_id, p.name, p.description, p.image_url, p.price, p.status, p.category_id  
+            FROM products p, categories c
+            WHERE p.category_id = c.category_id AND c.name = ?;""";
+
+    private static final String GET_ALL_IN_STOCK_QUERY = """
+            SELECT product_id, name, description, image_url, price, status, category_id  
+            FROM products
+            WHERE status = 'in stock';""";
 
     private static final String RESTORE_BY_ID_QUERY = """
             UPDATE products 
@@ -64,9 +76,8 @@ public class ProductDaoImpl implements ProductDao {
             statement.setString(2, product.getDescription());
             statement.setString(3, product.getImageUrl());
             statement.setBigDecimal(4, product.getPrice());
-            statement.setString(5, product.getStatus().getBdValue());
+            statement.setString(5, product.getStatus().getDbValue());
             statement.setLong(6, product.getCategoryId());
-
             statement.executeUpdate();
             try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {
@@ -77,7 +88,7 @@ public class ProductDaoImpl implements ProductDao {
         } catch (SQLException e) {
             throw new DaoException("Failed to create product: ", e);
         }
-        logger.log(Level.DEBUG, "Product created: {}", product);
+        logger.log(Level.DEBUG, "Product was created: {}", product);
         return product;
     }
 
@@ -85,52 +96,50 @@ public class ProductDaoImpl implements ProductDao {
     public Product updateById(Product product) throws DaoException {
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_QUERY)) {
-
             statement.setString(1, product.getName());
-            statement.setString(3, product.getDescription());
-            statement.setString(2, product.getImageUrl());
-            statement.setBigDecimal(5, product.getPrice());
-            statement.setString(7, product.getStatus().getBdValue());
-            statement.setLong(7, product.getCategoryId());
+            statement.setString(2, product.getDescription());
+            statement.setString(3, product.getImageUrl());
+            statement.setBigDecimal(4, product.getPrice());
+            statement.setString(5, product.getStatus().getDbValue());
+            statement.setLong(6, product.getCategoryId());
             statement.setLong(7, product.getProductId());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new DaoException("Failed to update product: ", e);
         }
-
-        logger.log(Level.DEBUG, "Product updated: {}", product);
+        logger.log(Level.DEBUG, "Product was updated: {}", product);
         return product;
     }
 
     @Override
-    public int deleteById(long id) throws DaoException {
-        int rowsUpdated;
+    public boolean deleteById(long id) throws DaoException {
+        boolean isDeleted;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_QUERY)) {
             statement.setLong(1, id);
-            rowsUpdated = statement.executeUpdate();
+            isDeleted = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to delete product by id " + id + " : ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isDeleted);
+        return isDeleted;
     }
 
     @Override
-    public Product getById(long id) throws DaoException {
-        Product product = null;
+    public Optional<Product> getById(long id) throws DaoException {
+       Optional<Product> product = Optional.empty();
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_ID_QUERY)) {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    product = extractProduct(resultSet);
+                    product = Optional.of(extractProduct(resultSet));
                 }
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to find product by id: ", e);
         }
-        logger.log(Level.DEBUG, "Found product by id {}: {}", id, product);
+        logger.log(Level.DEBUG, "Found product by id {}: {}", id, product.orElse(new Product()));
         return product;
     }
 
@@ -147,23 +156,58 @@ public class ProductDaoImpl implements ProductDao {
         } catch (SQLException e) {
             throw new DaoException("Failed to find all products: ", e);
         }
-
-        logger.log(Level.DEBUG, "All allProducts: {}", allProducts);
+        logger.log(Level.DEBUG, "All products: {}", allProducts);
         return allProducts;
     }
 
     @Override
-    public int restoreById(long id) throws DaoException {
-        int rowsUpdated;
+    public List<Product> getByCategoryName(String name) throws DaoException {
+        List<Product> productsByCategory = new ArrayList<>();
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_BY_CATEGORY_NAME_QUERY)) {
+            statement.setString(1, name);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Product product = extractProduct(resultSet);
+                    productsByCategory.add(product);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to find products by category: ", e);
+        }
+        logger.log(Level.DEBUG, "Products by provided category: {}", productsByCategory);
+        return productsByCategory;
+    }
+
+    @Override
+    public List<Product> getAllInStock(String name) throws DaoException {
+        List<Product> productsInStock = new ArrayList<>();
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_ALL_IN_STOCK_QUERY);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                Product product = extractProduct(resultSet);
+                productsInStock.add(product);
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to find products in stock: ", e);
+        }
+        logger.log(Level.DEBUG, "Products in stock: {}", productsInStock);
+        return productsInStock;
+    }
+
+    @Override
+    public boolean restoreById(long id) throws DaoException {
+        boolean isRestored;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(RESTORE_BY_ID_QUERY)) {
             statement.setLong(1, id);
-            rowsUpdated = statement.executeUpdate();
+            isRestored = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to restore product by id " + id + " : ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isRestored);
+        return isRestored;
     }
 
     private Product extractProduct(ResultSet resultSet) throws SQLException{

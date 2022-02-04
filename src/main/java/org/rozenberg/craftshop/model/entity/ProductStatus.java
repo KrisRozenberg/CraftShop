@@ -4,13 +4,13 @@ public enum ProductStatus {
     IN_STOCK("in stock"),
     OUT_OF_STOCK("out of stock");
 
-    private final String bdValue;
+    private final String dbValue;
 
-    ProductStatus(String bdValue) {
-        this.bdValue = bdValue;
+    ProductStatus(String dbValue) {
+        this.dbValue = dbValue;
     }
 
-    public String getBdValue() {
-        return bdValue;
+    public String getDbValue() {
+        return dbValue;
     }
 }

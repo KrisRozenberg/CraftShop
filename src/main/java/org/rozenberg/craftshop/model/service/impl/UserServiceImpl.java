@@ -7,7 +7,6 @@ import org.rozenberg.craftshop.model.entity.User;
 import org.rozenberg.craftshop.model.service.UserService;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class UserServiceImpl implements UserService {
@@ -15,13 +14,13 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public User createAdmin(User user) throws ServiceException {
+    public User create(User user) throws ServiceException {
         return null;
     }
 
     @Override
-    public Optional<User> sighIn(String login, String password) throws ServiceException {
-        return Optional.empty();
+    public boolean sighIn(String login, String password) throws ServiceException {
+        return false;
     }
 
     @Override
@@ -30,8 +29,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findById(Long id) throws ServiceException {
-        return null;
+    public Optional<User> findById(Long id) throws ServiceException {
+        return Optional.empty();
     }
 
     @Override
@@ -50,22 +49,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean validateInputPasswords(Map<String, String> formData) {
+    public boolean isLoginExist(String login) throws ServiceException {
         return false;
     }
 
     @Override
-    public boolean validateUserData(Map<String, String> formData) {
-        return false;
-    }
-
-    @Override
-    public boolean checkIfLoginExist(String login) throws ServiceException {
-        return false;
-    }
-
-    @Override
-    public boolean checkIfEmailExist(String email) throws ServiceException {
+    public boolean isEmailExist(String email) throws ServiceException {
         return false;
     }
 

@@ -5,13 +5,13 @@ public enum OrderStatus {
     DONE("done"),
     REJECTED("rejected");
 
-    private final String bdValue;
+    private final String dbValue;
 
-    OrderStatus(String bdValue) {
-        this.bdValue = bdValue;
+    OrderStatus(String dbValue) {
+        this.dbValue = dbValue;
     }
 
-    public String getBdValue() {
-        return bdValue;
+    public String getDbValue() {
+        return dbValue;
     }
 }

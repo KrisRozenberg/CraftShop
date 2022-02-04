@@ -31,7 +31,7 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             newCategory = categoryDao.create(category);
         } catch (DaoException e) {
-            throw new ServiceException("create() - Failed to create category ", e);
+            throw new ServiceException("Failed to create category: ", e);
         }
         logger.log(Level.DEBUG, "Category was created: {}", newCategory);
         return newCategory;
@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             category = categoryDao.getById(id);
         } catch (DaoException e) {
-            throw new ServiceException("Failed to find category ", e);
+            throw new ServiceException("Failed to find category by id: ", e);
         }
         logger.log(Level.DEBUG, "Category was found: {}", category);
         return category;

@@ -13,9 +13,11 @@ import org.rozenberg.craftshop.model.pool.CustomConnectionPool;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserDaoImpl implements UserDao {
     private static final Logger logger = LogManager.getLogger();
+    private static final int ONE_CONSTANT = 1;
 
     private static final String GET_BY_ID_QUERY = """
             SELECT user_id, name, surname, login, password, email, role, status, invoice_id 
@@ -36,7 +38,7 @@ public class UserDaoImpl implements UserDao {
             SELECT user_id, name, surname, login, password, email, role, status, invoice_id
             FROM users;""";
 
-    private static final String CREATE_ADMIN_QUERY = """
+    private static final String CREATE_USER_QUERY = """
             INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
 
@@ -60,10 +62,20 @@ public class UserDaoImpl implements UserDao {
             SET status = 'active'
             WHERE user_id = ?;""";
 
-    private static final String UPDATE_PASSWORD_QUERY = """
+    private static final String UPDATE_PASSWORD_BY_ID_QUERY = """
             UPDATE users
             SET password = ?
             WHERE user_id = ?;""";
+
+    private static final String GET_PASSWORD_BY_LOGIN_QUERY = """
+            SELECT password
+            FROM users
+            WHERE login = ?;""";
+
+    private static final String GET_PASSWORD_BY_EMAIL_QUERY = """
+            SELECT password
+            FROM users
+            WHERE email = ?;""";
 
     private static UserDaoImpl instance;
 
@@ -78,56 +90,56 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public User getById(Long id) throws DaoException {
-        User user = null;
+    public Optional<User> getById(Long id) throws DaoException {
+        Optional<User> user = Optional.empty();
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_ID_QUERY)) {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    user = extractUser(resultSet);
+                    user = Optional.of(extractUser(resultSet));
                 }
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to find user: ", e);
         }
-        logger.log(Level.DEBUG, "Found user: {}", user);
+        logger.log(Level.DEBUG, "Found user: {}", user.orElse(new User()));
         return user;
     }
 
     @Override
-    public User getByLogin(String login) throws DaoException {
-        User user = null;
+    public Optional<User> getByLogin(String login) throws DaoException {
+        Optional<User> user = Optional.empty();
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_LOGIN_QUERY)) {
             statement.setString(1, login);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    user = extractUser(resultSet);
+                    user = Optional.of(extractUser(resultSet));
                 }
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to find user by login: ", e);
         }
-        logger.log(Level.DEBUG, "Found user: {}", user);
+        logger.log(Level.DEBUG, "Found user: {}", user.orElse(new User()));
         return user;
     }
 
     @Override
-    public User getByEmail(String email) throws DaoException {
-        User user = null;
+    public Optional<User> getByEmail(String email) throws DaoException {
+        Optional<User> user = Optional.empty();
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_EMAIL_QUERY)) {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    user = extractUser(resultSet);
+                    user = Optional.of(extractUser(resultSet));
                 }
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to find user: ", e);
         }
-        logger.log(Level.DEBUG, "Found user: {}", user);
+        logger.log(Level.DEBUG, "Found user: {}", user.orElse(new User()));
         return user;
     }
 
@@ -144,15 +156,14 @@ public class UserDaoImpl implements UserDao {
         } catch (SQLException e) {
             throw new DaoException("Failed to find all users: ", e);
         }
-
         logger.log(Level.DEBUG, "All users: {}", allUsers);
         return allUsers;
     }
 
     @Override
-    public User createAdmin(User user) throws DaoException {
+    public User create(User user) throws DaoException {
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(CREATE_ADMIN_QUERY,
+             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getName());
             statement.setString(2, user.getSurname());
@@ -162,7 +173,6 @@ public class UserDaoImpl implements UserDao {
             statement.setString(6, user.getRole().toString().toLowerCase());
             statement.setString(7, user.getUserStatus().toString().toLowerCase());
             statement.setLong(8, user.getInvoiceId());
-
             statement.executeUpdate();
             try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {
@@ -171,9 +181,9 @@ public class UserDaoImpl implements UserDao {
                 }
             }
         } catch (SQLException e) {
-            throw new DaoException("Failed to create admin: ", e);
+            throw new DaoException("Failed to create user: ", e);
         }
-        logger.log(Level.DEBUG, "New admin was created: {}", user);
+        logger.log(Level.DEBUG, "New user was created: {}", user);
         return user;
     }
 
@@ -181,11 +191,10 @@ public class UserDaoImpl implements UserDao {
     public User updateById(User user) throws DaoException {
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_BY_ID_QUERY)) {
-
-            statement.setString(3, user.getName());
-            statement.setString(4, user.getSurname());
-            statement.setString(1, user.getLogin());
-            statement.setString(2, user.getPassword());
+            statement.setString(1, user.getName());
+            statement.setString(2, user.getSurname());
+            statement.setString(3, user.getLogin());
+            statement.setString(4, user.getPassword());
             statement.setString(5, user.getEmail());
             statement.setString(6, user.getRole().toString().toLowerCase());
             statement.setString(7, user.getUserStatus().toString().toLowerCase());
@@ -195,66 +204,101 @@ public class UserDaoImpl implements UserDao {
         } catch (SQLException e) {
             throw new DaoException("Failed to update user: ", e);
         }
-
         logger.log(Level.DEBUG, "User updated: {}", user);
         return user;
     }
 
     @Override
-    public int blockById(long id) throws DaoException {
-        int rowsUpdated;
+    public boolean blockById(long id) throws DaoException {
+        boolean isBlocked;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(BLOCK_BY_ID_QUERY)) {
             statement.setLong(1, id);
-            rowsUpdated = statement.executeUpdate();
+            isBlocked = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to block user by id " + id + " : ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isBlocked);
+        return isBlocked;
     }
 
     @Override
-    public int deleteById(long id) throws DaoException {
-        int rowsUpdated;
+    public boolean deleteById(long id) throws DaoException {
+        boolean isDeleted;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_QUERY)) {
             statement.setLong(1, id);
-            rowsUpdated = statement.executeUpdate();
+            isDeleted = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to delete user by id " + id + " : ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isDeleted);
+        return isDeleted;
     }
 
     @Override
-    public int restoreById(long id) throws DaoException {
-        int rowsUpdated;
+    public boolean restoreById(long id) throws DaoException {
+        boolean isRestored;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(RESTORE_BY_ID_QUERY)) {
             statement.setLong(1, id);
-            rowsUpdated = statement.executeUpdate();
+            isRestored = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to restore user by id " + id + " : ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isRestored);
+        return isRestored;
     }
 
     @Override
-    public int updatePassword(long id, String password) throws DaoException {
-        int rowsUpdated;
+    public boolean updatePasswordById(long id, String password) throws DaoException {
+        boolean isUpdated;
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(UPDATE_PASSWORD_QUERY)) {
+             PreparedStatement statement = connection.prepareStatement(UPDATE_PASSWORD_BY_ID_QUERY)) {
             statement.setString(1, password);
             statement.setLong(2, id);
-            rowsUpdated = statement.executeUpdate();
+            isUpdated = statement.executeUpdate() == ONE_CONSTANT;
         } catch (SQLException e) {
             throw new DaoException("Failed to update user's password: ", e);
         }
-        logger.log(Level.DEBUG, "Number of rows updated: {}", rowsUpdated);
-        return rowsUpdated;
+        logger.log(Level.DEBUG, "Row was updated: {}", isUpdated);
+        return isUpdated;
+    }
+
+    @Override
+    public String getPasswordByLogin(String login) throws DaoException {
+        String password = null;
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_PASSWORD_BY_LOGIN_QUERY)) {
+            statement.setString(1, login);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    password = resultSet.getString(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to get password by login: ", e);
+        }
+        logger.log(Level.DEBUG, "Found password by login {}: {}", login, password);
+        return password;
+    }
+
+    @Override
+    public String getPasswordByEmail(String email) throws DaoException {
+        String password = null;
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_PASSWORD_BY_EMAIL_QUERY)) {
+            statement.setString(1, email);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    password = resultSet.getString(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to get password by email: ", e);
+        }
+        logger.log(Level.DEBUG, "Found password by email {}: {}", email, password);
+        return password;
     }
 
     private User extractUser(ResultSet resultSet) throws SQLException{
