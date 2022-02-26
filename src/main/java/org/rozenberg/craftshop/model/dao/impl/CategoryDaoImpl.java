@@ -9,16 +9,17 @@ import org.rozenberg.craftshop.model.entity.Category;
 import org.rozenberg.craftshop.model.pool.CustomConnectionPool;
 
 import java.sql.*;
+import java.util.Optional;
 
 public class CategoryDaoImpl implements CategoryDao {
     private static final Logger logger = LogManager.getLogger();
 
     private static final String CREATE_QUERY = """
-            INSERT INTO categories (name) 
+            INSERT INTO categories (name)
             VALUES (?);""";
 
-    private static final String FIND_BY_ID_QUERY = """
-            SELECT category_id   
+    private static final String GET_BY_ID_QUERY = """
+            SELECT category_id, name
             FROM categories
             WHERE category_id = ?;""";
 
@@ -55,20 +56,20 @@ public class CategoryDaoImpl implements CategoryDao {
     }
 
     @Override
-    public Category getById(long id) throws DaoException {
-        Category category = null;
+    public Optional<Category> getById(long id) throws DaoException {
+        Optional<Category> category = Optional.empty();
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_QUERY)) {
+             PreparedStatement statement = connection.prepareStatement(GET_BY_ID_QUERY)) {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    category = new Category(resultSet.getLong(1), resultSet.getString(2));
+                    category = Optional.of(new Category(resultSet.getLong(1), resultSet.getString(2)));
                 }
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to get category: ", e);
         }
-        logger.log(Level.DEBUG, "Found category: {}", category);
+        logger.log(Level.DEBUG, "Found category: {}", category.orElse(new Category()));
         return category;
     }
 }

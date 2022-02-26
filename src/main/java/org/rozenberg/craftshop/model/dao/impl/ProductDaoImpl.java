@@ -18,12 +18,12 @@ public class ProductDaoImpl implements ProductDao {
     private static final int ONE_CONSTANT = 1;
 
     private static final String CREATE_QUERY = """
-            INSERT INTO products (name, description, image_url, price, status, category_id) 
-            VALUES (?, ?, ?, ?, ?, ?);""";
+            INSERT INTO products (name, description, image_url, price, quantity, status, category_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?);""";
 
     private static final String UPDATE_BY_ID_QUERY = """
             UPDATE products 
-            SET name = ?, description = ?, image_url = ?, price = ?, status = ?, category_id = ? 
+            SET name = ?, description = ?, image_url = ?, price = ?, quantity = ? status = ?, category_id = ? 
             WHERE product_id = ?;""";
 
     private static final String DELETE_BY_ID_QUERY = """
@@ -32,21 +32,21 @@ public class ProductDaoImpl implements ProductDao {
             WHERE product_id = ?;""";
 
     private static final String GET_BY_ID_QUERY = """
-            SELECT product_id, name, description, image_url, price, status, category_id
+            SELECT product_id, name, description, image_url, price, quantity, status, category_id
             FROM products 
             WHERE product_id = ?;""";
 
     private static final String GET_ALL_QUERY = """
-            SELECT product_id, name, description, image_url, price, status, category_id  
+            SELECT product_id, name, description, image_url, price, quantity, status, category_id  
             FROM products;""";
 
     private static final String GET_BY_CATEGORY_NAME_QUERY = """
-            SELECT p.product_id, p.name, p.description, p.image_url, p.price, p.status, p.category_id  
+            SELECT p.product_id, p.name, p.description, p.image_url, p.price, p.quantity, p.status, p.category_id  
             FROM products p, categories c
             WHERE p.category_id = c.category_id AND c.name = ?;""";
 
     private static final String GET_ALL_IN_STOCK_QUERY = """
-            SELECT product_id, name, description, image_url, price, status, category_id  
+            SELECT product_id, name, description, image_url, price, quantity, status, category_id  
             FROM products
             WHERE status = 'in stock';""";
 
@@ -76,8 +76,9 @@ public class ProductDaoImpl implements ProductDao {
             statement.setString(2, product.getDescription());
             statement.setString(3, product.getImageUrl());
             statement.setBigDecimal(4, product.getPrice());
-            statement.setString(5, product.getStatus().getDbValue());
-            statement.setLong(6, product.getCategoryId());
+            statement.setInt(5, product.getQuantity());
+            statement.setString(6, product.getStatus().getDbValue());
+            statement.setLong(7, product.getCategoryId());
             statement.executeUpdate();
             try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {
@@ -100,9 +101,10 @@ public class ProductDaoImpl implements ProductDao {
             statement.setString(2, product.getDescription());
             statement.setString(3, product.getImageUrl());
             statement.setBigDecimal(4, product.getPrice());
-            statement.setString(5, product.getStatus().getDbValue());
-            statement.setLong(6, product.getCategoryId());
-            statement.setLong(7, product.getProductId());
+            statement.setInt(5, product.getQuantity());
+            statement.setString(6, product.getStatus().getDbValue());
+            statement.setLong(7, product.getCategoryId());
+            statement.setLong(8, product.getProductId());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new DaoException("Failed to update product: ", e);
@@ -217,7 +219,8 @@ public class ProductDaoImpl implements ProductDao {
                 resultSet.getString(3),
                 resultSet.getString(4),
                 resultSet.getBigDecimal(5),
-                ProductStatus.valueOf(resultSet.getString(6).toUpperCase().replaceAll(" ", "_")),
-                resultSet.getLong(7));
+                resultSet.getInt(6),
+                ProductStatus.valueOf(resultSet.getString(7).toUpperCase().replaceAll(" ", "_")),
+                resultSet.getLong(8));
     }
 }

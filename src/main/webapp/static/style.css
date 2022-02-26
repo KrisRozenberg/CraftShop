@@ -1,0 +1,56 @@
+html, body {
+    height: 100%;
+}
+
+html, body, div, header, footer, main, img, h1, h2, h3, p {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: azure;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom-style: groove;
+}
+
+header > h2 {
+    padding: 0.5em 1.5em 0.5em 0.5em;
+    color: darkslateblue;
+    font-style: italic;
+}
+
+.locale {
+    padding: 0.2vw 1vw;
+    display: grid;
+}
+
+.p {
+    align-content: center;
+    font-size: larger;
+}
+
+footer {
+    border-top-style: groove;
+}
+
+footer p {
+    padding-right: 0.5vw;
+    text-align: end;
+    color: darkslateblue;
+    font-style: italic;
+}
+
+footer div p {
+    padding-right: 0;
+    text-align: center;
+}
+
+@media screen and (max-width: 300px) {
+    .locale {
+        display: inline;
+    }
+}

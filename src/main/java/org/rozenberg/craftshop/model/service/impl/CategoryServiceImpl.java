@@ -41,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Category getById(long id) throws ServiceException {
         Category category;
         try {
-            category = categoryDao.getById(id);
+            category = categoryDao.getById(id).orElse(new Category());
         } catch (DaoException e) {
             throw new ServiceException("Failed to find category by id: ", e);
         }

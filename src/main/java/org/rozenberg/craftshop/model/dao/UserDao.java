@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface UserDao {
     Optional<User> getById(Long id) throws DaoException;
     Optional<User> getByLogin(String login) throws DaoException;
+    Optional<User> getByLoginAndPassword(String login, String password) throws DaoException;
     Optional<User> getByEmail(String email) throws DaoException;
     List<User> getAll() throws DaoException;
     User create(User user) throws DaoException;

@@ -8,26 +8,29 @@ public class Product {
     private String description;
     private String imageUrl;
     private BigDecimal price;
+    private int quantity;
     private ProductStatus status;
     private long categoryId;
 
     public Product(){}
 
-    public Product(long productId, String name, String description, String imageUrl, BigDecimal price, ProductStatus status, long categoryId) {
+    public Product(long productId, String name, String description, String imageUrl, BigDecimal price, int quantity, ProductStatus status, long categoryId) {
         this.productId = productId;
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
         this.price = price;
+        this.quantity = quantity;
         this.status = status;
         this.categoryId = categoryId;
     }
 
-    public Product( String name, String description, String imageUrl, BigDecimal price, ProductStatus status, long categoryId) {
+    public Product( String name, String description, String imageUrl, BigDecimal price, int quantity, ProductStatus status, long categoryId) {
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
         this.price = price;
+        this.quantity = quantity;
         this.status = status;
         this.categoryId = categoryId;
     }
@@ -72,6 +75,14 @@ public class Product {
         this.price = price;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
     public ProductStatus getStatus() {
         return status;
     }
@@ -98,6 +109,7 @@ public class Product {
         if (description != null ? !description.equals(newProduct.description) : newProduct.description != null) return false;
         if (imageUrl != null ? !imageUrl.equals(newProduct.imageUrl) : newProduct.imageUrl != null) return false;
         if (price.compareTo(newProduct.price) != 0) return false;
+        if (quantity != newProduct.quantity) return false;
         if (status != newProduct.status) return false;
         return categoryId == newProduct.categoryId;
     }
@@ -109,6 +121,7 @@ public class Product {
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (imageUrl != null ? imageUrl.hashCode() : 0);
         result = 31 * result + price.intValue();
+        result = 31 * result + quantity;
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (int) (categoryId ^ (categoryId >>> 32));
         return result;
@@ -122,6 +135,7 @@ public class Product {
         sb.append(", description='").append(description).append('\'');
         sb.append(", imageUrl='").append(imageUrl).append('\'');
         sb.append(", price=").append(price);
+        sb.append(", quantity=").append(quantity);
         sb.append(", status='").append(status).append('\'');
         sb.append(", categoryId=").append(categoryId);
         sb.append('}');

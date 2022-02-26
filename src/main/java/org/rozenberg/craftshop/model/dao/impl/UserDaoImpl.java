@@ -29,6 +29,11 @@ public class UserDaoImpl implements UserDao {
             FROM users
             WHERE login = ?;""";
 
+    private static final String GET_BY_LOGIN_AND_PASSWORD_QUERY = """
+            SELECT user_id, name, surname, login, password, email, role, status, invoice_id
+            FROM users
+            WHERE login = ? AND password = ?;""";
+
     private static final String GET_BY_EMAIL_QUERY = """
             SELECT user_id, name, surname, login, password, email, role, status, invoice_id
             FROM users
@@ -120,6 +125,25 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             throw new DaoException("Failed to find user by login: ", e);
+        }
+        logger.log(Level.DEBUG, "Found user: {}", user.orElse(new User()));
+        return user;
+    }
+
+    @Override
+    public Optional<User> getByLoginAndPassword(String login, String password) throws DaoException {
+        Optional<User> user = Optional.empty();
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_BY_LOGIN_AND_PASSWORD_QUERY)) {
+            statement.setString(1, login);
+            statement.setString(2, password);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    user = Optional.of(extractUser(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to find user by login and password: ", e);
         }
         logger.log(Level.DEBUG, "Found user: {}", user.orElse(new User()));
         return user;

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
+    Optional<User> login(String login, String password) throws ServiceException;
+
     User create(User user) throws ServiceException;
     boolean sighIn(String login, String password) throws ServiceException;
     List<User> findAll() throws ServiceException;
