@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface InvoiceDao {
-    Invoice create(Invoice invoice) throws DaoException;
+    Invoice create() throws DaoException;
     Optional<BigDecimal> getMoney(long id) throws DaoException;
     boolean setMoney(long id, BigDecimal money) throws DaoException;
     Optional<BigDecimal> getDiscount(long id) throws DaoException;

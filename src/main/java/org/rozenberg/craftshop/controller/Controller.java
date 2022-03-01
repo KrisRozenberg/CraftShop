@@ -29,8 +29,9 @@ public class Controller extends HttpServlet {
 
     private void doRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String commandName = request.getParameter(RequestParameter.COMMAND);
+        logger.log(Level.DEBUG, "command name: {}", commandName);
         Optional<Command> command = CommandProvider.getCommand(commandName);
-
+        logger.log(Level.DEBUG, "command: {}", command);
         if(command.isPresent()) {
             Router router = command.get().execute(request);
             switch (router.getRouterType()) {

@@ -12,6 +12,7 @@ import org.rozenberg.craftshop.model.dao.impl.UserDaoImpl;
 import org.rozenberg.craftshop.model.entity.Category;
 import org.rozenberg.craftshop.model.entity.User;
 import org.rozenberg.craftshop.model.service.UserService;
+import org.rozenberg.craftshop.util.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,19 +33,26 @@ public class UserServiceImpl implements UserService {
         return instance;
     }
 
-    /**
-     * Checks if user's credentials are in the database.
-     *
-     * @param login of the user
-     * @param password of the user
-     * @return Optional<User>
-     */
+    @Override
+    public User create(User user) throws ServiceException {
+        User newUser;
+        String encodedPassword = PasswordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        try {
+            newUser = userDao.create(user);
+        } catch (DaoException e) {
+            throw new ServiceException("Failed to create user: ", e);
+        }
+        logger.log(Level.DEBUG, "Created user: {}", newUser);
+        return newUser;
+    }
 
     @Override
-    public Optional<User> login(String login, String password) throws ServiceException {
+    public Optional<User> signIn(String login, String password) throws ServiceException {
         Optional<User> user;
         try {
-           user = userDao.getByLoginAndPassword(login, password);
+            String encoded = PasswordEncoder.encode(password);
+            user = userDao.getByLoginAndPassword(login, encoded);
         } catch (DaoException e) {
             throw new ServiceException("Failed to find user by login and password: ", e);
         }
@@ -53,22 +61,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User create(User user) throws ServiceException {
+    public List<User> getAll() throws ServiceException {
         return null;
     }
 
     @Override
-    public boolean sighIn(String login, String password) throws ServiceException {
-        return false;
-    }
-
-    @Override
-    public List<User> findAll() throws ServiceException {
-        return null;
-    }
-
-    @Override
-    public Optional<User> findById(Long id) throws ServiceException {
+    public Optional<User> getById(Long id) throws ServiceException {
         return Optional.empty();
     }
 

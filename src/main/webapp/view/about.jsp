@@ -20,12 +20,11 @@
 <body>
 <c:import url="header.jsp"/>
 
-<main>
-    <div class="container">
+<div class="container">
+    <div class="row">
         <p><strong>${info}</strong></p>
     </div>
-
-</main>
+</div>
 
 <c:import url="footer.jsp"/>
 

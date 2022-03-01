@@ -13,9 +13,11 @@ public interface UserDao {
     Optional<User> getByEmail(String email) throws DaoException;
     List<User> getAll() throws DaoException;
     User create(User user) throws DaoException;
+//    User createAdmin(User user) throws DaoException;
+//    User createClient(User user) throws DaoException;
     User updateById(User user) throws DaoException;
     boolean blockById(long id) throws DaoException;
-    boolean deleteById(long id) throws DaoException;
+//    boolean deleteById(long id) throws DaoException;
     boolean restoreById(long id) throws DaoException;
     boolean updatePasswordById(long id, String password) throws DaoException;
     String getPasswordByLogin(String login) throws DaoException;

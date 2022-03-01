@@ -47,6 +47,14 @@ public class UserDaoImpl implements UserDao {
             INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
 
+//    private static final String CREATE_ADMIN_QUERY = """
+//            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
+//            VALUES (?, ?, ?, ?, ?, 'admin', 'active', 0);""";
+//
+//    private static final String CREATE_CLIENT_QUERY = """
+//            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
+//            VALUES (?, ?, ?, ?, ?, 'client', 'active', ?);""";
+
     private static final String UPDATE_BY_ID_QUERY = """
             UPDATE users
             SET name = ?, surname = ?, login = ?, password = ?, email = ?, role = ?, status = ?, invoice_id = ?
@@ -56,11 +64,11 @@ public class UserDaoImpl implements UserDao {
             UPDATE users
             SET status = 'blocked'
             WHERE user_id = ?;""";
-
-    private static final String DELETE_BY_ID_QUERY = """
-            UPDATE users
-            SET status = 'inactive'
-            WHERE user_id = ?;""";
+//
+//    private static final String DELETE_BY_ID_QUERY = """
+//            UPDATE users
+//            SET status = 'inactive'
+//            WHERE user_id = ?;""";
 
     private static final String RESTORE_BY_ID_QUERY = """
             UPDATE users
@@ -211,6 +219,55 @@ public class UserDaoImpl implements UserDao {
         return user;
     }
 
+//    @Override
+//    public User createAdmin(User user) throws DaoException {
+//        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+//             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
+//                     Statement.RETURN_GENERATED_KEYS)) {
+//            statement.setString(1, user.getName());
+//            statement.setString(2, user.getSurname());
+//            statement.setString(3, user.getLogin());
+//            statement.setString(4, user.getPassword());
+//            statement.setString(5, user.getEmail());
+//            statement.executeUpdate();
+//            try (ResultSet resultSet = statement.getGeneratedKeys()) {
+//                if (resultSet.next()) {
+//                    long userId = resultSet.getLong(1);
+//                    user.setUserId(userId);
+//                }
+//            }
+//        } catch (SQLException e) {
+//            throw new DaoException("Failed to create user: ", e);
+//        }
+//        logger.log(Level.DEBUG, "New user was created: {}", user);
+//        return user;
+//    }
+//
+//    @Override
+//    public User createClient(User user) throws DaoException {
+//        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+//             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
+//                     Statement.RETURN_GENERATED_KEYS)) {
+//            statement.setString(1, user.getName());
+//            statement.setString(2, user.getSurname());
+//            statement.setString(3, user.getLogin());
+//            statement.setString(4, user.getPassword());
+//            statement.setString(5, user.getEmail());
+//            statement.setLong(6, user.getInvoiceId());
+//            statement.executeUpdate();
+//            try (ResultSet resultSet = statement.getGeneratedKeys()) {
+//                if (resultSet.next()) {
+//                    long userId = resultSet.getLong(1);
+//                    user.setUserId(userId);
+//                }
+//            }
+//        } catch (SQLException e) {
+//            throw new DaoException("Failed to create user: ", e);
+//        }
+//        logger.log(Level.DEBUG, "New user was created: {}", user);
+//        return user;
+//    }
+
     @Override
     public User updateById(User user) throws DaoException {
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
@@ -246,19 +303,19 @@ public class UserDaoImpl implements UserDao {
         return isBlocked;
     }
 
-    @Override
-    public boolean deleteById(long id) throws DaoException {
-        boolean isDeleted;
-        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_QUERY)) {
-            statement.setLong(1, id);
-            isDeleted = statement.executeUpdate() == ONE_CONSTANT;
-        } catch (SQLException e) {
-            throw new DaoException("Failed to delete user by id " + id + " : ", e);
-        }
-        logger.log(Level.DEBUG, "Row was updated: {}", isDeleted);
-        return isDeleted;
-    }
+//    @Override
+//    public boolean deleteById(long id) throws DaoException {
+//        boolean isDeleted;
+//        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+//             PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_QUERY)) {
+//            statement.setLong(1, id);
+//            isDeleted = statement.executeUpdate() == ONE_CONSTANT;
+//        } catch (SQLException e) {
+//            throw new DaoException("Failed to delete user by id " + id + " : ", e);
+//        }
+//        logger.log(Level.DEBUG, "Row was updated: {}", isDeleted);
+//        return isDeleted;
+//    }
 
     @Override
     public boolean restoreById(long id) throws DaoException {

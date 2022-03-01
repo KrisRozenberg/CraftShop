@@ -16,9 +16,13 @@ public class InvoiceDaoImpl implements InvoiceDao {
     private static final Logger logger = LogManager.getLogger();
     private static final int ONE_CONSTANT = 1;
 
+//    private static final String CREATE_QUERY = """
+//            INSERT INTO invoices (money, discount)
+//            VALUES (?, ?);""";
+
     private static final String CREATE_QUERY = """
             INSERT INTO invoices (money, discount) 
-            VALUES (?, ?);""";
+            VALUES (DEFAULT, DEFAULT);""";
 
     private static final String GET_MONEY_QUERY = """
             SELECT money  
@@ -53,12 +57,11 @@ public class InvoiceDaoImpl implements InvoiceDao {
     }
 
     @Override
-    public Invoice create(Invoice invoice) throws DaoException {
+    public Invoice create() throws DaoException {
+        Invoice invoice = new Invoice(BigDecimal.ZERO, BigDecimal.ZERO);
         try (Connection connection = CustomConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement(CREATE_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
-            statement.setBigDecimal(1, invoice.getMoney());
-            statement.setBigDecimal(2, invoice.getDiscount());
             statement.executeUpdate();
             try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {

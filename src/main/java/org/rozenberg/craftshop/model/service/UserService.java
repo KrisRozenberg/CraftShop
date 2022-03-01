@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
-    Optional<User> login(String login, String password) throws ServiceException;
-
     User create(User user) throws ServiceException;
-    boolean sighIn(String login, String password) throws ServiceException;
-    List<User> findAll() throws ServiceException;
-    Optional<User> findById(Long id) throws ServiceException;
+    Optional<User> signIn(String login, String password) throws ServiceException;
+
+    List<User> getAll() throws ServiceException;
+    Optional<User> getById(Long id) throws ServiceException;
     User updateById(User user) throws ServiceException;
     boolean deleteById(Long id) throws ServiceException;
     boolean restoreById(Long id) throws ServiceException;

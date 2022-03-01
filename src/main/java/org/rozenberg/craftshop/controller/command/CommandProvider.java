@@ -1,11 +1,15 @@
 package org.rozenberg.craftshop.controller.command;
 
 import org.rozenberg.craftshop.controller.command.impl.common.ChangeLanguageCommand;
+import org.rozenberg.craftshop.controller.command.impl.common.LogInCommand;
+import org.rozenberg.craftshop.controller.command.impl.common.LogOutCommand;
 
 import java.util.Optional;
 
 public enum CommandProvider {
-    CHANGE_LANGUAGE(new ChangeLanguageCommand());
+    CHANGE_LANGUAGE(new ChangeLanguageCommand()),
+    LOG_IN(new LogInCommand()),
+    LOG_OUT(new LogOutCommand());
 
     private final Command command;
 

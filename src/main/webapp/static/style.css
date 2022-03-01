@@ -11,6 +11,10 @@ body {
     background-color: azure;
 }
 
+.container {
+    height: inherit;
+}
+
 header {
     display: flex;
     justify-content: space-between;
@@ -31,6 +35,10 @@ header > h2 {
 .p {
     align-content: center;
     font-size: larger;
+}
+
+.sign-in {
+    justify-content: space-evenly;
 }
 
 footer {

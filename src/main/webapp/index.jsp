@@ -5,8 +5,6 @@
 <fmt:setLocale value="${sessionScope.local}" />
 <fmt:setBundle basename="locale/locale" var="local" />
 
-<fmt:message bundle="${local}" key="login.button" var="login" />
-
 <html>
 <head>
     <title>CraftShop</title>
