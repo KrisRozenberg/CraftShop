@@ -19,6 +19,14 @@ public class UserDaoImpl implements UserDao {
     private static final Logger logger = LogManager.getLogger();
     private static final int ONE_CONSTANT = 1;
 
+    private static final String CREATE_USER_QUERY = """
+            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
+
+    private static final String CREATE_CLIENT_INVOICE_QUERY = """
+            INSERT INTO invoices (money, discount) 
+            VALUES (DEFAULT, DEFAULT);""";
+
     private static final String GET_BY_ID_QUERY = """
             SELECT user_id, name, surname, login, password, email, role, status, invoice_id 
             FROM users 
@@ -42,18 +50,6 @@ public class UserDaoImpl implements UserDao {
     private static final String GET_ALL_QUERY = """
             SELECT user_id, name, surname, login, password, email, role, status, invoice_id
             FROM users;""";
-
-    private static final String CREATE_USER_QUERY = """
-            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
-
-//    private static final String CREATE_ADMIN_QUERY = """
-//            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
-//            VALUES (?, ?, ?, ?, ?, 'admin', 'active', 0);""";
-//
-//    private static final String CREATE_CLIENT_QUERY = """
-//            INSERT INTO users (name, surname, login, password, email, role, status, invoice_id)
-//            VALUES (?, ?, ?, ?, ?, 'client', 'active', ?);""";
 
     private static final String UPDATE_BY_ID_QUERY = """
             UPDATE users
@@ -100,6 +96,70 @@ public class UserDaoImpl implements UserDao {
             instance = new UserDaoImpl();
         }
         return instance;
+    }
+
+    @Override
+    public User create(User user) throws DaoException {
+        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
+             PreparedStatement userStatement = connection.prepareStatement(CREATE_USER_QUERY,
+                     Statement.RETURN_GENERATED_KEYS)) {
+            if (user.getRole() == Role.CLIENT) {
+                try (PreparedStatement invoiceStatement = connection.prepareStatement(CREATE_CLIENT_INVOICE_QUERY,
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    connection.setAutoCommit(false);
+                    invoiceStatement.executeUpdate();
+                    try (ResultSet resultSet = invoiceStatement.getGeneratedKeys()) {
+                        if (resultSet.next()) {
+                            long invoiceId = resultSet.getLong(1);
+                            user.setInvoiceId(invoiceId);
+                        }
+                    }
+                    userStatement.setString(1, user.getName());
+                    userStatement.setString(2, user.getSurname());
+                    userStatement.setString(3, user.getLogin());
+                    userStatement.setString(4, user.getPassword());
+                    userStatement.setString(5, user.getEmail());
+                    userStatement.setString(6, user.getRole().toString().toLowerCase());
+                    userStatement.setString(7, user.getUserStatus().toString().toLowerCase());
+                    userStatement.setLong(8, user.getInvoiceId());
+                    userStatement.executeUpdate();
+                    try (ResultSet resultSet = userStatement.getGeneratedKeys()) {
+                        if (resultSet.next()) {
+                            long userId = resultSet.getLong(1);
+                            user.setUserId(userId);
+                        }
+                    }
+                    connection.commit();
+                } catch (SQLException e) {
+                    connection.rollback();
+                    throw new DaoException("Failed to create new client: " + user, e);
+                } finally {
+                    connection.setAutoCommit(true);
+                }
+            }
+            else {
+                user.setInvoiceId(1);
+                userStatement.setString(1, user.getName());
+                userStatement.setString(2, user.getSurname());
+                userStatement.setString(3, user.getLogin());
+                userStatement.setString(4, user.getPassword());
+                userStatement.setString(5, user.getEmail());
+                userStatement.setString(6, user.getRole().toString().toLowerCase());
+                userStatement.setString(7, user.getUserStatus().toString().toLowerCase());
+                userStatement.setLong(8, user.getInvoiceId());
+                userStatement.executeUpdate();
+                try (ResultSet resultSet = userStatement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        long userId = resultSet.getLong(1);
+                        user.setUserId(userId);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Failed to create user: ", e);
+        }
+        logger.log(Level.DEBUG, "New user was created: {}", user);
+        return user;
     }
 
     @Override
@@ -191,82 +251,6 @@ public class UserDaoImpl implements UserDao {
         logger.log(Level.DEBUG, "All users: {}", allUsers);
         return allUsers;
     }
-
-    @Override
-    public User create(User user) throws DaoException {
-        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
-                     Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, user.getName());
-            statement.setString(2, user.getSurname());
-            statement.setString(3, user.getLogin());
-            statement.setString(4, user.getPassword());
-            statement.setString(5, user.getEmail());
-            statement.setString(6, user.getRole().toString().toLowerCase());
-            statement.setString(7, user.getUserStatus().toString().toLowerCase());
-            statement.setLong(8, user.getInvoiceId());
-            statement.executeUpdate();
-            try (ResultSet resultSet = statement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    long userId = resultSet.getLong(1);
-                    user.setUserId(userId);
-                }
-            }
-        } catch (SQLException e) {
-            throw new DaoException("Failed to create user: ", e);
-        }
-        logger.log(Level.DEBUG, "New user was created: {}", user);
-        return user;
-    }
-
-//    @Override
-//    public User createAdmin(User user) throws DaoException {
-//        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-//             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
-//                     Statement.RETURN_GENERATED_KEYS)) {
-//            statement.setString(1, user.getName());
-//            statement.setString(2, user.getSurname());
-//            statement.setString(3, user.getLogin());
-//            statement.setString(4, user.getPassword());
-//            statement.setString(5, user.getEmail());
-//            statement.executeUpdate();
-//            try (ResultSet resultSet = statement.getGeneratedKeys()) {
-//                if (resultSet.next()) {
-//                    long userId = resultSet.getLong(1);
-//                    user.setUserId(userId);
-//                }
-//            }
-//        } catch (SQLException e) {
-//            throw new DaoException("Failed to create user: ", e);
-//        }
-//        logger.log(Level.DEBUG, "New user was created: {}", user);
-//        return user;
-//    }
-//
-//    @Override
-//    public User createClient(User user) throws DaoException {
-//        try (Connection connection = CustomConnectionPool.getInstance().getConnection();
-//             PreparedStatement statement = connection.prepareStatement(CREATE_USER_QUERY,
-//                     Statement.RETURN_GENERATED_KEYS)) {
-//            statement.setString(1, user.getName());
-//            statement.setString(2, user.getSurname());
-//            statement.setString(3, user.getLogin());
-//            statement.setString(4, user.getPassword());
-//            statement.setString(5, user.getEmail());
-//            statement.setLong(6, user.getInvoiceId());
-//            statement.executeUpdate();
-//            try (ResultSet resultSet = statement.getGeneratedKeys()) {
-//                if (resultSet.next()) {
-//                    long userId = resultSet.getLong(1);
-//                    user.setUserId(userId);
-//                }
-//            }
-//        } catch (SQLException e) {
-//            throw new DaoException("Failed to create user: ", e);
-//        }
-//        logger.log(Level.DEBUG, "New user was created: {}", user);
-//        return user;
-//    }
 
     @Override
     public User updateById(User user) throws DaoException {

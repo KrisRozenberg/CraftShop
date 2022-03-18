@@ -12,6 +12,7 @@
 <fmt:message bundle="${local}" key="header.products" var="products" />
 <fmt:message bundle="${local}" key="header.orders" var="orders" />
 <fmt:message bundle="${local}" key="header.logIn" var="logIn" />
+<fmt:message bundle="${local}" key="header.registration" var="registration" />
 
 <html>
 <body>
@@ -49,6 +50,7 @@
                 <c:otherwise>
                     <div class="col">
                         <a href="${pageContext.request.contextPath}/view/logIn.jsp">${logIn}</a>
+                        <a href="${pageContext.request.contextPath}/view/registration.jsp">${registration}</a>
                     </div>
                 </c:otherwise>
             </c:choose>

@@ -41,6 +41,15 @@ header > h2 {
     justify-content: space-evenly;
 }
 
+.star-required {
+    display: flex;
+    justify-content: space-between;
+}
+
+.required {
+    color: red;
+}
+
 footer {
     border-top-style: groove;
 }

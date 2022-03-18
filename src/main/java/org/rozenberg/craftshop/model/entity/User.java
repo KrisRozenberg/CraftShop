@@ -37,6 +37,16 @@ public class User {
         this.invoiceId = invoiceId;
     }
 
+    public User(String name, String surname, String login, String password, String email, Role role, UserStatus userStatus) {
+        this.name = name;
+        this.surname = surname;
+        this.login = login;
+        this.password = password;
+        this.email = email;
+        this.role = role;
+        this.userStatus = userStatus;
+    }
+
     public long getUserId() {
         return userId;
     }
